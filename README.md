@@ -7,7 +7,7 @@ Contributions are welcome and the package is provided for free.
 If you want to contribute, check out the [Issues](https://github.com/Gestalt-Engine/BoundingBoxes/issues) to see if there are any pressing needs (or open your own for something you want to work on)
 
 # Unity
-Currently developed on `2018.03.0f2`
+Currently developed on `2019.02.17f1`
 
 # Documentation
 [Online Documentation](http://www.gestaltengine.com/bounding-boxes-documentation/)
