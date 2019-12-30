@@ -2,157 +2,120 @@
 using UnityEngine;
 using UnityEditor;
 using BoundingBoxes;
+using System.Text.RegularExpressions;
 
 namespace EditorUtilities
 {
-    /// <summary>
-    /// Display a draggable bounding box when enabled.
-    /// </summary>
     [CustomEditor(typeof(BoundingBox2D), true)]
     public class DraggableBoundingBox2D : Editor
     {
-        readonly string LabelSuffix = "Bounding Box";
+        BoundingBox2D b;
         readonly GUIStyle style = new GUIStyle();
-        bool showProperties = false;
-        bool showBoxOptions = false;
-
-        private void OnEnable()
-        {
-            UpdateEditorView();
-
-        }
-
-        public override void OnInspectorGUI()
-        {
-            base.OnInspectorGUI();
-            BoundingBox2D b = target as BoundingBox2D;
-
-            BuildEditor();
-
-        }
-
-        public void OnSceneGUI()
-        {
-            BoundingBox2D b = target as BoundingBox2D;
-            if (!b.enabled || !b.Visible())
-            {
-                return;
-            }
-
-            Vector3 pos = b.Center;
-
-            DrawBoundingBox(b);
-
-            Vector3 TopLeft = Handles.PositionHandle(b.TopLeft(), Quaternion.Euler(0, 180, 0));
-            if (TopLeft.x < b.Center.x)
-            {
-                b.LeftRange = TopLeft.x - b.Center.x;
-            }
-            if (TopLeft.y > b.Center.y)
-            {
-                b.UpRange = TopLeft.y - b.Center.y;
-            }
-
-
-            Vector3 TopRight = Handles.PositionHandle(b.TopRight(), Quaternion.identity);
-            if (TopRight.y > b.Center.y)
-            {
-                b.UpRange = TopRight.y - b.Center.y;
-            }
-            if (TopRight.x > b.Center.x)
-            {
-                b.RightRange = TopRight.x - b.Center.x;
-            }
-
-            Vector3 BottomLeft = Handles.PositionHandle(b.BottomLeft(), Quaternion.Euler(0, 0, 180));
-            if (BottomLeft.x < b.Center.x)
-            {
-                b.LeftRange = BottomLeft.x - b.Center.x;
-            }
-            if (BottomLeft.y < b.Center.y)
-            {
-                b.DownRange = BottomLeft.y - b.Center.y;
-            }
-
-
-            Vector3 BottomRight = Handles.PositionHandle(b.BottomRight(), Quaternion.Euler(0, 180, 180));
-            if (BottomRight.x > b.Center.x)
-            {
-                b.RightRange = BottomRight.x - b.Center.x;
-            }
-            if (BottomRight.y < b.Center.y)
-            {
-                b.DownRange = BottomRight.y - b.Center.y;
-            }
-
-            //serializedObject.ApplyModifiedProperties();
-        }
+        readonly string LabelSuffix = "Bounding box";
+        bool _boundingBoxDropdownOpen = false;
 
         /// <summary>
-        /// Updates the editor view from changes to BoundingBox2D settings
+        /// Updates the style and text color.
         /// </summary>
-        public void UpdateEditorView()
+        private void UpdateStyle()
         {
-            BoundingBox2D b = target as BoundingBox2D;
             style.fontStyle = FontStyle.Bold;
             style.normal.textColor = b.GetTextColor();
             style.alignment = TextAnchor.UpperRight;
         }
 
-        /// <summary>
-        /// Builds the editor settings and draws.
-        /// </summary>
-        public void BuildEditor()
+        private void OnEnable()
         {
-            BoundingBox2D b = target as BoundingBox2D;
+            b = target as BoundingBox2D;
+            UpdateStyle();
+        }
 
-            bool tmpDisplay = b.Visible();
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            BuildPropertyEditor();
+
+        }
+
+        /// <summary>
+        /// Builds the GUI property editor.
+        /// </summary>
+        public void BuildPropertyEditor()
+        {
+            serializedObject.Update();
+            EditorGUI.BeginChangeCheck();
+
+            bool willDoReset = false;
+            bool willResetCenter = false;
+
+            /// Toggle visibility of the bounding box in the editor
             b.SetVisible(GUILayout.Toggle(b.Visible(), "Edit Bounding Box"));
-            if (tmpDisplay != b.Visible())
+
+            /// Dropdown to edit bounding box visual properties 
+            _boundingBoxDropdownOpen = EditorGUILayout.Foldout(_boundingBoxDropdownOpen, "Bounding Box Properties");
+            if (_boundingBoxDropdownOpen)
             {
-                SceneView.RepaintAll();
-            }
-            showBoxOptions = EditorGUILayout.Foldout(showBoxOptions, "Bounding Box");
-            if (showBoxOptions)
-            {
+
+                SerializedProperty fillColor = serializedObject.FindProperty("_fillColor");
+                SerializedProperty outlineColor = serializedObject.FindProperty("_outlineColor");
+                SerializedProperty textColor = serializedObject.FindProperty("_labelTextColor");
+
                 // Resets the center of the bounding box to its transform
-                if (GUILayout.Button("Reset center to parent"))
-                {
-                    b.Center = b.transform.position;
-                    SceneView.RepaintAll();
-                }
+                willResetCenter = GUILayout.Button("Reset center to parent");
 
                 // Resets all bounding box settings to defaults
-                if (GUILayout.Button("Reset Box to defaults"))
+                willDoReset = GUILayout.Button("Reset Box to defaults");
+
+                // Updates fill color of the box
+                EditorGUILayout.LabelField("Fill Color");
+                EditorGUILayout.PropertyField(fillColor, GUIContent.none, GUILayout.Width(127));
+
+                // Updates the outline color of the box
+                EditorGUILayout.LabelField("Outline Color");
+                EditorGUILayout.PropertyField(outlineColor, GUIContent.none, GUILayout.Width(127));
+
+                // Updates the text color of the box label
+                EditorGUILayout.LabelField("Text Color");
+                EditorGUILayout.PropertyField(textColor, GUIContent.none, GUILayout.Width(127));
+
+                serializedObject.ApplyModifiedProperties();
+            }
+
+            /// Repaint scene if changes occured
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (willResetCenter)
+                {
+                    b.Center = b.transform.position;
+                }
+
+                if (willDoReset)
                 {
                     b.Reset();
-                    SceneView.RepaintAll();
                 }
-
-                // Dropdown to display and edit box appearance preferences
-                showProperties = EditorGUILayout.Foldout(showProperties, "Colors");
-                if (showProperties)
-                {
-                    Color fillColor = EditorGUILayout.ColorField("Box Fill Color", b.GetFillColor());
-                    b.SetFillColor(fillColor);
-
-                    Color lineColor = EditorGUILayout.ColorField("Box Outline Color", b.GetOutlineColor());
-                    b.SetOutlineColor(lineColor);
-
-                    Color textColor = EditorGUILayout.ColorField("Box Label Text Color", b.GetTextColor());
-                    b.SetTextColor(textColor);
-                }
+                SceneView.RepaintAll();
             }
+        }
+
+        public void OnSceneGUI()
+        {
+            if (!b.enabled || !b.Visible())
+            {
+                return;
+            }
+
+            DrawBoundingBox();
+            DrawBoundingBoxHandles();
+
         }
 
         /// <summary>
         /// Draws the bounding box.
         /// </summary>
-        /// <param name="b">The BoundingBox2D component.</param>
-        public void DrawBoundingBox(BoundingBox2D b)
+        public void DrawBoundingBox()
         {
             // update the label
-            UpdateEditorView();
+            UpdateStyle();
             Handles.Label(new Vector3(b.Center.x + b.TopLeft().x, b.Center.y + b.TopLeft().y), FormatBoundingBoxLabel(b.name), style);
 
             // build verticies
@@ -168,6 +131,33 @@ namespace EditorUtilities
         }
 
         /// <summary>
+        /// Draws the bounding box handles.
+        /// </summary>
+        public void DrawBoundingBoxHandles()
+        {
+            serializedObject.Update();
+            Undo.RecordObject(b, "Modify bounding box");
+
+            Vector3 TopLeft = Handles.PositionHandle(b.TopLeft(), Quaternion.Euler(0, 180, 0));
+            b.SetLeftRange(TopLeft.x);
+            b.SetUpRange(TopLeft.y);
+
+            Vector3 BottomLeft = Handles.PositionHandle(b.BottomLeft(), Quaternion.Euler(0, 0, 180));
+            b.SetLeftRange(BottomLeft.x);
+            b.SetDownRange(BottomLeft.y);
+
+            Vector3 TopRight = Handles.PositionHandle(b.TopRight(), Quaternion.identity);
+            b.SetRightRange(TopRight.x);
+            b.SetUpRange(TopRight.y);
+
+            Vector3 BottomRight = Handles.PositionHandle(b.BottomRight(), Quaternion.Euler(0, 180, 180));
+            b.SetRightRange(BottomRight.x);
+            b.SetDownRange(BottomRight.y);
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        /// <summary>
         /// Formats the bounding box label.
         /// </summary>
         /// <returns>The bounding box label.</returns>
@@ -176,6 +166,8 @@ namespace EditorUtilities
         {
             return name + LabelSuffix;
         }
+
+        // end class
     }
 }
 #endif
