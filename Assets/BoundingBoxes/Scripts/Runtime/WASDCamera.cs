@@ -9,7 +9,7 @@ namespace BoundingBoxes
     // that utilizes the bounding box for its allowed movement range
     /// </summary>
     [AddComponentMenu("Scripts/WASDCamera")]
-    public class WASDCamera : BoundingBox
+    public class WASDCamera : BoundingBox2D
     {
         public bool CameraLocked = false;
         public Camera cam;

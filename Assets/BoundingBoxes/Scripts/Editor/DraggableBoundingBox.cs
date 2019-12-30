@@ -8,49 +8,32 @@ namespace EditorUtilities
     /// <summary>
     /// Display a draggable bounding box when enabled.
     /// </summary>
-    [CustomEditor(typeof(BoundingBox), true)]
-    public class DraggableBoundingBox : Editor
+    [CustomEditor(typeof(BoundingBox2D), true)]
+    public class DraggableBoundingBox2D : Editor
     {
+        readonly string LabelSuffix = "Bounding Box";
         readonly GUIStyle style = new GUIStyle();
+        bool showProperties = false;
+        bool showBoxOptions = false;
+
         private void OnEnable()
         {
-            style.fontStyle = FontStyle.Bold;
-            style.normal.textColor = Color.white;
-            style.alignment = TextAnchor.UpperCenter;
+            UpdateEditorView();
+
         }
 
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            BoundingBox b = target as BoundingBox;
-            bool tmpDisplay = b.Visible();
-            b.SetVisible(GUILayout.Toggle(b.Visible(), "Edit Bounding Box"));
-            if (tmpDisplay != b.Visible())
-            {
-                SceneView.RepaintAll();
-            }
+            BoundingBox2D b = target as BoundingBox2D;
 
-            if (GUILayout.Button("Reset center to parent"))
-            {
-                b.Center = b.transform.position;
-                SceneView.RepaintAll();
-            }
-
-            if (GUILayout.Button("Reset Box to defaults"))
-            {
-                b.LeftRange = -5;
-                b.UpRange = 5;
-                b.RightRange = 5;
-                b.DownRange = -5;
-                b.Center = b.transform.position;
-                SceneView.RepaintAll();
-            }
+            BuildEditor();
 
         }
 
         public void OnSceneGUI()
         {
-            BoundingBox b = target as BoundingBox;
+            BoundingBox2D b = target as BoundingBox2D;
             if (!b.enabled || !b.Visible())
             {
                 return;
@@ -58,19 +41,7 @@ namespace EditorUtilities
 
             Vector3 pos = b.Center;
 
-
-            string labelText = b.name + " Bounding Box";
-            Handles.Label(new Vector3(b.Center.x+b.TopLeft().x, b.Center.y+b.TopLeft().y), labelText);
-
-            Vector3[] verts = {
-                    b.TopLeft(),
-                    b.BottomLeft(),
-                    b.BottomRight(),
-                    b.TopRight(),
-            };
-
-
-            Handles.DrawSolidRectangleWithOutline(verts, new Color(0.5f, 0.5f, 0.5f, 0.1f), new Color(0, 0, 0, 1));
+            DrawBoundingBox(b);
 
             Vector3 TopLeft = Handles.PositionHandle(b.TopLeft(), Quaternion.Euler(0, 180, 0));
             if (TopLeft.x < b.Center.x)
@@ -113,6 +84,97 @@ namespace EditorUtilities
             {
                 b.DownRange = BottomRight.y - b.Center.y;
             }
+
+            //serializedObject.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Updates the editor view from changes to BoundingBox2D settings
+        /// </summary>
+        public void UpdateEditorView()
+        {
+            BoundingBox2D b = target as BoundingBox2D;
+            style.fontStyle = FontStyle.Bold;
+            style.normal.textColor = b.GetTextColor();
+            style.alignment = TextAnchor.UpperRight;
+        }
+
+        /// <summary>
+        /// Builds the editor settings and draws.
+        /// </summary>
+        public void BuildEditor()
+        {
+            BoundingBox2D b = target as BoundingBox2D;
+
+            bool tmpDisplay = b.Visible();
+            b.SetVisible(GUILayout.Toggle(b.Visible(), "Edit Bounding Box"));
+            if (tmpDisplay != b.Visible())
+            {
+                SceneView.RepaintAll();
+            }
+            showBoxOptions = EditorGUILayout.Foldout(showBoxOptions, "Bounding Box");
+            if (showBoxOptions)
+            {
+                // Resets the center of the bounding box to its transform
+                if (GUILayout.Button("Reset center to parent"))
+                {
+                    b.Center = b.transform.position;
+                    SceneView.RepaintAll();
+                }
+
+                // Resets all bounding box settings to defaults
+                if (GUILayout.Button("Reset Box to defaults"))
+                {
+                    b.Reset();
+                    SceneView.RepaintAll();
+                }
+
+                // Dropdown to display and edit box appearance preferences
+                showProperties = EditorGUILayout.Foldout(showProperties, "Colors");
+                if (showProperties)
+                {
+                    Color fillColor = EditorGUILayout.ColorField("Box Fill Color", b.GetFillColor());
+                    b.SetFillColor(fillColor);
+
+                    Color lineColor = EditorGUILayout.ColorField("Box Outline Color", b.GetOutlineColor());
+                    b.SetOutlineColor(lineColor);
+
+                    Color textColor = EditorGUILayout.ColorField("Box Label Text Color", b.GetTextColor());
+                    b.SetTextColor(textColor);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws the bounding box.
+        /// </summary>
+        /// <param name="b">The BoundingBox2D component.</param>
+        public void DrawBoundingBox(BoundingBox2D b)
+        {
+            // update the label
+            UpdateEditorView();
+            Handles.Label(new Vector3(b.Center.x + b.TopLeft().x, b.Center.y + b.TopLeft().y), FormatBoundingBoxLabel(b.name), style);
+
+            // build verticies
+            Vector3[] verts = {
+                    b.TopLeft(),
+                    b.BottomLeft(),
+                    b.BottomRight(),
+                    b.TopRight(),
+            };
+
+            // draw rectangle
+            Handles.DrawSolidRectangleWithOutline(verts, b.GetFillColor(), b.GetOutlineColor());
+        }
+
+        /// <summary>
+        /// Formats the bounding box label.
+        /// </summary>
+        /// <returns>The bounding box label.</returns>
+        /// <param name="name">Name.</param>
+        public string FormatBoundingBoxLabel(string name)
+        {
+            return name + LabelSuffix;
         }
     }
 }

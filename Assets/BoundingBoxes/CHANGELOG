@@ -4,9 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-## [1.0.0] - 2019-12-31
+## [1.0.0] - 2019-12-29
 ### This is the first official release of "Gestalt Engine 2D Toolset"
 ### Added
 - BoundingBox Monobehavior class
@@ -14,4 +12,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WASDCamera attachable class
 
 ## [0.0.1] - 2019-12-28
-### This is the first internal release of "Gestalt Engine 2D Toolset"
+### This is the first internal release of "Gestalt Engine 2D Toolset" for testing
