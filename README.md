@@ -10,9 +10,9 @@ If you want to contribute, check out the [Issues](https://github.com/Gestalt-Eng
 Currently developed on `2019.02.17f1`
 
 # Documentation
-[Online Documentation](http://www.gestaltengine.com/bounding-boxes-documentation/)
+[Online Documentation](https://github.com/Gestalt-Engine/BoundingBoxes/wiki)
 
-The [Package](src/Packages/BoundingBoxes) directory.
+The [Package](Assets/BoundingBoxes) directory.
 
 # Authors
 Asciifaceman <gestaltengine@gmail.com>

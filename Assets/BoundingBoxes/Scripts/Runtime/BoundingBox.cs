@@ -41,6 +41,15 @@ namespace BoundingBoxes
         }
 
         /// <summary>
+        /// The area of the bounding box.
+        /// </summary>
+        /// <returns>The area.</returns>
+        public float Area()
+        {
+            return (LeftRange + RightRange) * (UpRange + DownRange);
+        }
+
+        /// <summary>
         /// Sets the color of the label text.
         /// </summary>
         /// <param name="col">Col.</param>
@@ -276,9 +285,9 @@ namespace BoundingBoxes
         /// Basic float comparison to determine if two floats are nearly equal.
         /// </summary>
         /// <returns><c>true</c>, if equal within epsilon, <c>false</c> otherwise.</returns>
-        /// <param name="a">The alpha component.</param>
-        /// <param name="b">The blue component.</param>
-        /// <param name="epsilon">Epsilon.</param>
+        /// <param name="a">The first float.</param>
+        /// <param name="b">The float to compare.</param>
+        /// <param name="epsilon">float Epsilon.</param>
         private bool NearlyEqual(float a, float b, float epsilon)
         {
             float absA = Mathf.Abs(a);

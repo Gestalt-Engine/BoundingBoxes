@@ -26,4 +26,4 @@ It already implements MonoBehavior so you do not need that inheritance.
 ### **Support & Documentation**
 Should you have any questions, suggestions, or require assistance, please contact us via the Asset Store.
 
-[Online Documentation](http://www.gestaltengine.com/bounding-boxes-documentation/)
+[Online Documentation](https://github.com/Gestalt-Engine/BoundingBoxes/wiki)
